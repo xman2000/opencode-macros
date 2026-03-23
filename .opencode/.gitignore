@@ -1,7 +1,10 @@
-plans/
-bun.lock
+node_modules
+plans
 package.json
 prompts/custom/*
 !prompts/custom/.gitkeep
 context/*
 !context/.gitkeep
+bun.lock
+.gitignore
+package-lock.json

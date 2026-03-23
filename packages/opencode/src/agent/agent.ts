@@ -1,10 +1,11 @@
 import { Config } from "../config/config"
 import z from "zod"
 import { Provider } from "../provider/provider"
+import { ModelID, ProviderID } from "../provider/schema"
 import { generateObject, streamObject, type ModelMessage } from "ai"
 import { SystemPrompt } from "../session/system"
 import { Instance } from "../project/instance"
-import { Truncate } from "../tool/truncation"
+import { Truncate } from "../tool/truncate"
 import { Auth } from "../auth"
 import { ProviderTransform } from "../provider/transform"
 
@@ -13,7 +14,7 @@ import PROMPT_COMPACTION from "./prompt/compaction.txt"
 import PROMPT_EXPLORE from "./prompt/explore.txt"
 import PROMPT_SUMMARY from "./prompt/summary.txt"
 import PROMPT_TITLE from "./prompt/title.txt"
-import { PermissionNext } from "@/permission/next"
+import { Permission } from "@/permission"
 import { mergeDeep, pipe, sortBy, values } from "remeda"
 import { Global } from "@/global"
 import path from "path"
@@ -42,15 +43,23 @@ export namespace Agent {
       topP: z.number().optional(),
       temperature: z.number().optional(),
       color: z.string().optional(),
+<<<<<<< HEAD
       summary: z.string().optional(),
       category: z.string().optional(),
       icon: z.string().optional(),
       tags: z.array(z.string()).optional(),
       permission: PermissionNext.Ruleset,
+=======
+      permission: Permission.Ruleset,
+      summary: z.string().optional(),
+      category: z.string().optional(),
+      icon: z.string().optional(),
+      tags: z.array(z.string()).optional(),
+>>>>>>> upstream/dev
       model: z
         .object({
-          modelID: z.string(),
-          providerID: z.string(),
+          modelID: ModelID.zod,
+          providerID: ProviderID.zod,
         })
         .optional(),
       variant: z.string().optional(),
@@ -68,7 +77,7 @@ export namespace Agent {
 
     const skillDirs = await Skill.dirs()
     const whitelistedDirs = [Truncate.GLOB, ...skillDirs.map((dir) => path.join(dir, "*"))]
-    const defaults = PermissionNext.fromConfig({
+    const defaults = Permission.fromConfig({
       "*": "allow",
       doom_loop: "ask",
       external_directory: {
@@ -86,16 +95,16 @@ export namespace Agent {
         "*.env.example": "allow",
       },
     })
-    const user = PermissionNext.fromConfig(cfg.permission ?? {})
+    const user = Permission.fromConfig(cfg.permission ?? {})
 
     const result: Record<string, Info> = {
       build: {
         name: "build",
         description: "The default agent. Executes tools based on configured permissions.",
         options: {},
-        permission: PermissionNext.merge(
+        permission: Permission.merge(
           defaults,
-          PermissionNext.fromConfig({
+          Permission.fromConfig({
             question: "allow",
             plan_enter: "allow",
           }),
@@ -108,9 +117,9 @@ export namespace Agent {
         name: "plan",
         description: "Plan mode. Disallows all edit tools.",
         options: {},
-        permission: PermissionNext.merge(
+        permission: Permission.merge(
           defaults,
-          PermissionNext.fromConfig({
+          Permission.fromConfig({
             question: "allow",
             plan_exit: "allow",
             external_directory: {
@@ -130,9 +139,9 @@ export namespace Agent {
       general: {
         name: "general",
         description: `General-purpose agent for researching complex questions and executing multi-step tasks. Use this agent to execute multiple units of work in parallel.`,
-        permission: PermissionNext.merge(
+        permission: Permission.merge(
           defaults,
-          PermissionNext.fromConfig({
+          Permission.fromConfig({
             todoread: "deny",
             todowrite: "deny",
           }),
@@ -144,9 +153,9 @@ export namespace Agent {
       },
       explore: {
         name: "explore",
-        permission: PermissionNext.merge(
+        permission: Permission.merge(
           defaults,
-          PermissionNext.fromConfig({
+          Permission.fromConfig({
             "*": "deny",
             grep: "allow",
             glob: "allow",
@@ -175,9 +184,9 @@ export namespace Agent {
         native: true,
         hidden: true,
         prompt: PROMPT_COMPACTION,
-        permission: PermissionNext.merge(
+        permission: Permission.merge(
           defaults,
-          PermissionNext.fromConfig({
+          Permission.fromConfig({
             "*": "deny",
           }),
           user,
@@ -191,9 +200,9 @@ export namespace Agent {
         native: true,
         hidden: true,
         temperature: 0.5,
-        permission: PermissionNext.merge(
+        permission: Permission.merge(
           defaults,
-          PermissionNext.fromConfig({
+          Permission.fromConfig({
             "*": "deny",
           }),
           user,
@@ -206,9 +215,9 @@ export namespace Agent {
         options: {},
         native: true,
         hidden: true,
-        permission: PermissionNext.merge(
+        permission: Permission.merge(
           defaults,
-          PermissionNext.fromConfig({
+          Permission.fromConfig({
             "*": "deny",
           }),
           user,
@@ -228,7 +237,7 @@ export namespace Agent {
         item = result[key] = {
           name: key,
           mode: "all",
-          permission: PermissionNext.merge(defaults, user),
+          permission: Permission.merge(defaults, user),
           options: {},
           native: false,
         }
@@ -249,7 +258,7 @@ export namespace Agent {
       item.name = value.name ?? item.name
       item.steps = value.steps ?? item.steps
       item.options = mergeDeep(item.options, value.options ?? {})
-      item.permission = PermissionNext.merge(item.permission, PermissionNext.fromConfig(value.permission ?? {}))
+      item.permission = Permission.merge(item.permission, Permission.fromConfig(value.permission ?? {}))
     }
 
     // Ensure Truncate.GLOB is allowed unless explicitly configured
@@ -262,9 +271,9 @@ export namespace Agent {
       })
       if (explicit) continue
 
-      result[name].permission = PermissionNext.merge(
+      result[name].permission = Permission.merge(
         result[name].permission,
-        PermissionNext.fromConfig({ external_directory: { [Truncate.GLOB]: "allow" } }),
+        Permission.fromConfig({ external_directory: { [Truncate.GLOB]: "allow" } }),
       )
     }
 
@@ -280,7 +289,17 @@ export namespace Agent {
     return pipe(
       await state(),
       values(),
-      sortBy([(x) => (cfg.default_agent ? x.name === canonical(cfg.default_agent) : x.name === "build"), "desc"]),
+<<<<<<< HEAD
+      sortBy(
+        [(x) => (cfg.default_agent ? x.name === canonical(cfg.default_agent) : x.name === "build"), "desc"],
+        [(x) => x.name, "asc"],
+      ),
+=======
+      sortBy(
+        [(x) => (cfg.default_agent ? x.name === cfg.default_agent : x.name === "build"), "desc"],
+        [(x) => x.name, "asc"],
+      ),
+>>>>>>> upstream/dev
     )
   }
 
@@ -302,7 +321,7 @@ export namespace Agent {
     return primaryVisible.name
   }
 
-  export async function generate(input: { description: string; model?: { providerID: string; modelID: string } }) {
+  export async function generate(input: { description: string; model?: { providerID: ProviderID; modelID: ModelID } }) {
     const cfg = await Config.get()
     const defaultModel = input.model ?? (await Provider.defaultModel())
     const model = await Provider.getModel(defaultModel.providerID, defaultModel.modelID)
@@ -340,11 +359,11 @@ export namespace Agent {
       }),
     } satisfies Parameters<typeof generateObject>[0]
 
+    // TODO: clean this up so provider specific logic doesnt bleed over
     if (defaultModel.providerID === "openai" && (await Auth.get(defaultModel.providerID))?.type === "oauth") {
       const result = streamObject({
         ...params,
         providerOptions: ProviderTransform.providerOptions(model, {
-          instructions: SystemPrompt.instructions(),
           store: false,
         }),
         onError: () => {},
