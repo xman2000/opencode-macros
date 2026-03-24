@@ -77,60 +77,12 @@ export namespace Command {
 
   export class Service extends ServiceMap.Service<Service, Interface>()("@opencode/Command") {}
 
-<<<<<<< HEAD
-    for (const [name, command] of Object.entries(cfg.command ?? {})) {
-      result[name] = {
-        name,
-        title: command.title,
-        agent: command.agent,
-        model: command.model,
-        description: command.description,
-        summary: command.summary,
-        category: command.category,
-        icon: command.icon,
-        tags: command.tags,
-        source: "command",
-        get template() {
-          return command.template
-        },
-        subtask: command.subtask,
-        hints: hints(command.template),
-      }
-    }
-    for (const [name, prompt] of Object.entries(await MCP.prompts())) {
-      result[name] = {
-        name,
-        source: "mcp",
-        description: prompt.description,
-        get template() {
-          // since a getter can't be async we need to manually return a promise here
-          return new Promise<string>(async (resolve, reject) => {
-            const template = await MCP.getPrompt(
-              prompt.client,
-              prompt.name,
-              prompt.arguments
-                ? // substitute each argument with $1, $2, etc.
-                  Object.fromEntries(prompt.arguments?.map((argument, i) => [argument.name, `$${i + 1}`]))
-                : {},
-            ).catch(reject)
-            resolve(
-              template?.messages
-                .map((message) => (message.content.type === "text" ? message.content.text : ""))
-                .join("\n") || "",
-            )
-          })
-        },
-        hints: prompt.arguments?.map((_, i) => `$${i + 1}`) ?? [],
-      }
-    }
-=======
   export const layer = Layer.effect(
     Service,
     Effect.gen(function* () {
       const init = Effect.fn("Command.state")(function* (ctx) {
         const cfg = yield* Effect.promise(() => Config.get())
         const commands: Record<string, Info> = {}
->>>>>>> upstream/dev
 
         commands[Default.INIT] = {
           name: Default.INIT,

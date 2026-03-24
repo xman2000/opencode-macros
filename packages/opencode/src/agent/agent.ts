@@ -43,19 +43,11 @@ export namespace Agent {
       topP: z.number().optional(),
       temperature: z.number().optional(),
       color: z.string().optional(),
-<<<<<<< HEAD
-      summary: z.string().optional(),
-      category: z.string().optional(),
-      icon: z.string().optional(),
-      tags: z.array(z.string()).optional(),
-      permission: PermissionNext.Ruleset,
-=======
       permission: Permission.Ruleset,
       summary: z.string().optional(),
       category: z.string().optional(),
       icon: z.string().optional(),
       tags: z.array(z.string()).optional(),
->>>>>>> upstream/dev
       model: z
         .object({
           modelID: ModelID.zod,
@@ -289,17 +281,10 @@ export namespace Agent {
     return pipe(
       await state(),
       values(),
-<<<<<<< HEAD
       sortBy(
         [(x) => (cfg.default_agent ? x.name === canonical(cfg.default_agent) : x.name === "build"), "desc"],
         [(x) => x.name, "asc"],
       ),
-=======
-      sortBy(
-        [(x) => (cfg.default_agent ? x.name === cfg.default_agent : x.name === "build"), "desc"],
-        [(x) => x.name, "asc"],
-      ),
->>>>>>> upstream/dev
     )
   }
 
