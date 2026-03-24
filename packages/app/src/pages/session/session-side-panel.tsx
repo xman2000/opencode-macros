@@ -32,7 +32,6 @@ import { Persist, persisted } from "@/utils/persist"
 import { createFileTabListSync } from "@/pages/session/file-tab-scroll"
 import { FileTabContent } from "@/pages/session/file-tabs"
 import { createOpenSessionFileTab, getTabReorderIndex } from "@/pages/session/helpers"
-import { StickyAddButton } from "@/pages/session/review-tab"
 import { setSessionHandoff } from "@/pages/session/handoff"
 
 type LibraryCommand = {
@@ -119,6 +118,10 @@ const commandRank = (item: LibraryCommand) => {
 const isCreate = (name: string) => {
   const value = label(name)
   return value === "create-new-command" || value === "create-new-agent"
+}
+
+function StickyAddButton(props: { children: JSX.Element }) {
+  return <div class="ml-auto shrink-0">{props.children}</div>
 }
 
 function renderPromptTemplate(template: string, values: { selection: string; clipboard: string }) {
